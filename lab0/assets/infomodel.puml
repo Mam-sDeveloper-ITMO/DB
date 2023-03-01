@@ -1,0 +1,46 @@
+@startuml Entity Relationship Model
+
+entity Human {
+    Human id
+    --
+    Name
+    Animal instance id (FK)
+}
+
+entity Animal {
+    Animal id
+    --
+    Biological species (FK)
+    Smartness
+}
+
+entity Species {
+    Species id
+    --
+    Species name
+}
+
+entity Action {
+    Action id
+    --
+    Action name
+    Description
+}
+
+entity Plan {
+    Plan id
+    --
+    Start time
+    End time
+}
+
+
+Human |o--|| Animal
+
+Animal }o--|| Species
+
+Animal }|--o{ Plan
+
+Plan }o--|{ Action
+
+@enduml

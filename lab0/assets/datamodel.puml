@@ -1,0 +1,63 @@
+@startuml Data Model
+
+entity Humans {
+    id SERIAL PRIMARY KEY
+    --
+    name VARCHAR(30) NOT NULL
+    animal_id INTEGER REFERENCES Animals (id) NOT NULL UNIQUE
+}
+
+entity AnimalsToPlans {
+    plan_id INTEGER REFERENCES Plans (id)
+    --
+    action_id INTEGER REFERENCES Actions (id)
+    PRIMARY KEY (plan_id, action_id)
+}
+
+
+entity Animals {
+    id SERIAL PRIMARY KEY
+    --
+    species INTEGER REFERENCES Species (id) NOT NULL
+    smartness INTEGER CHECK (smartness >= 0)
+}
+
+entity PlansToActions {
+    plan_id INTEGER REFERENCES Plans (id)
+    --
+    animal_id INTEGER REFERENCES Animals (id)
+    PRIMARY KEY (plan_id, animal_id)
+}
+
+entity Species {
+    id SERIAL PRIMARY KEY
+    --
+    name VARCHAR(50) NOT NULL UNIQUE
+}
+
+entity Actions {
+    id SERIAL PRIMARY KEY
+    --
+    name VARCHAR(100) NOT NULL UNIQUE
+    description TEXT NOT NULL
+}
+
+entity Plans {
+    id SERIAL PRIMARY KEY
+    --
+    start_time TIMESTAMP
+    end_time TIMESTAMP
+}
+
+
+Humans::animal_id |o--|| Animals::id
+
+Animals::species }o--|| Species
+
+Animals::id ||--o{ AnimalsToPlans::animal_id
+Plans::id ||--|{ AnimalsToPlans::plan_id
+
+Plans::id ||--|{ PlansToActions::plan_id
+Actions::id ||--o{ PlansToActions::action_id
+
+@enduml
