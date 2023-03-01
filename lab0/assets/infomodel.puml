@@ -5,6 +5,7 @@ entity Human {
     --
     Name
     Animal instance id (FK)
+    Home location id (KF)
 }
 
 entity Animal {
@@ -12,6 +13,7 @@ entity Animal {
     --
     Biological species (FK)
     Smartness
+    Current location id (FK)
 }
 
 entity Species {
@@ -34,12 +36,36 @@ entity Plan {
     End time
 }
 
+entity Location {
+    Location id
+    --
+    Name
+    Description
+    Placement
+}
+
+entity AnimalsPack {
+    Aimals pack id
+    --
+    Leader id (FK)
+    Habitat location id (FK)
+}
 
 Human |o--|| Animal
+
+Human }o--o| Location
+
+Animal }o--|| Location
 
 Animal }o--|| Species
 
 Animal }|--o{ Plan
+
+Animal }|--o| AnimalsPack
+
+AnimalsPack ||--|| Animal
+
+AnimalsPack }o--|| Location
 
 Plan }o--|{ Action
 

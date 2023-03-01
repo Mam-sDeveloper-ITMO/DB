@@ -32,6 +32,8 @@
 > 2. Animal - животные 
 > 3. Action - действия (смотреть, беспокоиться, искать и тд)
 > 4. Plan - план из нескольких действий
+> 5. Location - местность, на которой находятся животные
+> 6. AnimalsPack - стая/стадо животных
 
 > **Характеристики:**
 > 1. Species - виды животных
@@ -46,11 +48,14 @@
 
 > **Human**:
 > - Name  
+> - Home
 > - Animal instance
 
 > **Animal**:
 > - Biological species
 > - Smartness
+> - Animals pack
+> - Current location
  
 > **Species**:
 > - Species name
@@ -62,6 +67,15 @@
 > **Plan**:
 > - Start time
 > - End time
+
+> **Location**:
+> - Name
+> - Description
+> - Placement
+
+> **AnimalsPack**:
+> - Leader
+> - Habitat location
 
 > **AnimalsToPlans**:
 > - Animal instance
@@ -75,11 +89,22 @@
 
 > `Human-Animal` - Связь 1:1. Каждому человеку соответствует единственный экземпляр животного, каждому животному может соответствовать не более одного человека
 
+> `Human-Location` - Связь M:1. Будем считать, что у каждого человека не более одного дома 
+
 > `Animal-Species` - Связь M:1. Одному животному соответствует один вид, могут быть животные одного вида
+
+> `Animal-AnimalsPack` - Связь М:1. Каждое животное принадлежит к не более чем одной стаи, стая может содержать много животных
+
+> `Animal-Location` - Связь M:1. Каждое животное находится в одной локации, локация может содержать много животных
 
 > `Animal-Plan` - Связь M:М. Каждому животному соответствует несколько (или 0) его планов, один план может соответствовать нескольким животным (при работе сообща, например)
 
 > `Plan-Action` - Связь M:М. Каждому плану соответствует несколько входящих в него видов действий (хотя бы одно), в разным планах могут быть одни виды действий
+
+> `AnimalsPack-Animal` - Связь 1:1. У каждой стаи один лидер
+
+> `AnimalsPack-Location` - Связь М:1. У каждой стаи одна среда обитания
+
 
 <div style="clear: both; page-break-after: always;"></div>
 
@@ -98,23 +123,37 @@
 ### Реализация даталогической модели в PostgreSQL
 
 ```sql
+CREATE TABLE IF NOT EXISTS Locations {
+    id SERIAL PRIMARY KEY,
+    name char(50) NOT NULL,
+    description TEXT NOT NULL,
+    placement POLYGON NOT NULL
+}
+
+CREATE TABLE IF NOT EXISTS AnimalsPacks {
+    id SERIAL PRIMARY KEY,
+    FOREIGN KEY (leader_animal_id) REFERENCES Animal (id) NOT NULL UNIQUE,
+    FOREIGN KEY (habitat_location_id) REFERENCES Locations (id) NOT NULL
+}
+
 CREATE TABLE IF NOT EXISTS Species (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL UNIQUE
 );
 
-
 CREATE TABLE IF NOT EXISTS Animals (
     id SERIAL PRIMARY KEY,
-    species INTEGER REFERENCES Species (id) NOT NULL,
-    smartness INTEGER CHECK (smartness >= 0)
+    FOREIGN KEY (species) REFERENCES Species (id) NOT NULL,
+    smartness INTEGER CHECK (smartness >= 0),
+    FOREIGN KEY (animal_pack_id) REFERENCES AnimalsPacks (id)
+    FOREIGN KEY (current_location_id) REFERENCES Locations (id) NOT NULL
 );
-
 
 CREATE TABLE IF NOT EXISTS Humans (
     id SERIAL PRIMARY KEY,
     name VARCHAR(30) NOT NULL, 
-    animal_id INTEGER REFERENCES Animals (id) NOT NULL UNIQUE
+    FOREIGN KEY (animal_id) REFERENCES Animals (id) NOT NULL UNIQUE
+    FOREIGN KEY (home_location_id) REFERENCES Locations (id)
 );
 
 CREATE TABLE IF NOT EXISTS Actions (
@@ -130,14 +169,14 @@ CREATE TABLE IF NOT EXISTS Plans (
 );
 
 CREATE TABLE IF NOT EXISTS PlanToActions (
-    plan_id INTEGER REFERENCES Plans (id),
-    action_id INTEGER REFERENCES Actions (id),
+    FOREIGN KEY (plan_id) REFERENCES Plans (id),
+    FOREIGN KEY (action_id) REFERENCES Actions (id),
     PRIMARY KEY (plan_id, action_id)
 );
 
 CREATE TABLE IF NOT EXISTS PlansToAnimals (
-    plan_id INTEGER REFERENCES Plans (id),
-    animal_id INTEGER REFERENCES Animals (id),
+    FOREIGN KEY (plan_id) REFERENCES Plans (id),
+    FOREIGN KEY (animal_id) REFERENCES Animals (id),
     PRIMARY KEY (plan_id, animal_id)
 );
 ```

@@ -4,29 +4,30 @@ entity Humans {
     id SERIAL PRIMARY KEY
     --
     name VARCHAR(30) NOT NULL
-    animal_id INTEGER REFERENCES Animals (id) NOT NULL UNIQUE
+    FOREIGN KEY (animal_id) REFERENCES Animals (id) NOT NULL UNIQUE
+    FOREIGN KEY (home_location_id) REFERENCES Locations (id)
 }
 
 entity AnimalsToPlans {
-    plan_id INTEGER REFERENCES Plans (id)
+    FOREIGN KEY (plan_id) REFERENCES Plans (id)
+    FOREIGN KEY (animal_id) REFERENCES Animals (id)
     --
-    action_id INTEGER REFERENCES Actions (id)
-    PRIMARY KEY (plan_id, action_id)
 }
 
 
 entity Animals {
     id SERIAL PRIMARY KEY
     --
-    species INTEGER REFERENCES Species (id) NOT NULL
+    FOREIGN KEY (species) REFERENCES Species (id) NOT NULL
     smartness INTEGER CHECK (smartness >= 0)
+    FOREIGN KEY (current_location_id) REFERENCES Locations (id) NOT NULL
+    FOREIGN KEY (animal_pack_id) REFERENCES AnimalsPacks (id)
 }
 
 entity PlansToActions {
-    plan_id INTEGER REFERENCES Plans (id)
+    FOREIGN KEY (plan_id) REFERENCES Plans (id)
+    FOREIGN KEY (action_id) REFERENCES Actions (id)
     --
-    animal_id INTEGER REFERENCES Animals (id)
-    PRIMARY KEY (plan_id, animal_id)
 }
 
 entity Species {
@@ -49,15 +50,37 @@ entity Plans {
     end_time TIMESTAMP
 }
 
+entity Locations {
+    id SERIAL PRIMARY KEY
+    --
+    name char(50) NOT NULL
+    description TEXT NOT NULL
+    placement POLYGON NOT NULL
+}
+
+entity AnimalsPacks {
+    id SERIAL PRIMARY KEY
+    --
+    FOREIGN KEY (leader_animal_id) REFERENCES Animal (id) NOT NULL UNIQUE
+    FOREIGN KEY (habitat_location_id) REFERENCES Locations (id) NOT NULL
+}
+
 
 Humans::animal_id |o--|| Animals::id
+Humans::home_location_id }o--o| Locations::id
 
-Animals::species }o--|| Species
+Animals::species }o--|| Species::id
+Animals::current_location_id }o--|| Locations::id
+Animals::animal_pack_id }|--o| AnimalsPacks::id
 
 Animals::id ||--o{ AnimalsToPlans::animal_id
 Plans::id ||--|{ AnimalsToPlans::plan_id
 
 Plans::id ||--|{ PlansToActions::plan_id
 Actions::id ||--o{ PlansToActions::action_id
+
+AnimalsPacks::leader_animal_id ||--|| Animals::id
+
+AnimalsPacks::habitat_location_id }o--|| Locations::id
 
 @enduml
